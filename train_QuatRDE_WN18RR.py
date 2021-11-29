@@ -5,7 +5,7 @@ import os
 con = config.Config()
 con.set_in_path("./benchmarks/WN18RR/")
 con.set_work_threads(8)
-con.set_train_times(3)
+con.set_train_times(3000)
 con.set_nbatches(100)
 con.set_alpha(0.1)
 con.set_bern(1)
