@@ -109,7 +109,7 @@ class QuatRDE(Model):
 
         regul = self.regulation(h) + self.regulation(r) + self.regulation(t) + \
                 self.regulation(h_transfer) + self.regulation(r_transfer) + self.regulation(t_transfer) + \
-                    self.regulation(h_r) + self.regulation(t_r)
+                    self.regulation(hr) + self.regulation(tr)
 
         return self.loss(score, regul)
 
@@ -124,8 +124,16 @@ class QuatRDE(Model):
         h1 = self._transfer(h, h_transfer, r_transfer)
         t1 = self._transfer(t, t_transfer, r_transfer)
 
-        hr = self._calc(h1, r)
-        score = torch.sum(hr * t1, -1)
+        hr = self.Whr(self.batch_r)
+        tr = self.Wtr(self.batch_r)
+
+        # multiplication as QuatE
+        h_r = self._calc(h1, hr)
+        t_r = self._calc(t1, tr)
+        hrr = self._calc(h_r, r)
+        
+        # Inner product as QuatE
+        score = torch.sum(hrr * t_r, -1)
 
         return score.cpu().data.numpy()
 
