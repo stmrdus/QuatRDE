@@ -10,12 +10,22 @@ INT lastValidTail = 0;
 REAL l_valid_filter_tot = 0;
 REAL r_valid_filter_tot = 0;
 
+REAL l_valid_filter_tot_3 = 0;
+REAL r_valid_filter_tot_3 = 0;
+
+REAL l_valid_filter_tot_1 = 0;
+REAL r_valid_filter_tot_1 = 0;
+
 extern "C"
 void validInit() {
     lastValidHead = 0;
     lastValidTail = 0;
     l_valid_filter_tot = 0;
     r_valid_filter_tot = 0;
+    l_valid_filter_tot_3 = 0;
+    r_valid_filter_tot_3 = 0;
+    l_valid_filter_tot_1 = 0;
+    r_valid_filter_tot_1 = 0;
 }
 
 extern "C"
@@ -52,6 +62,8 @@ void validHead(REAL *con) {
 	    }
     }
     if (l_filter_s < 10) l_valid_filter_tot += 1;
+    if (l_filter_s < 3) l_valid_filter_tot_3 += 1;
+    if (l_filter_s < 1) l_valid_filter_tot_1 += 1;
     lastValidHead ++;
   //  printf("head: l_valid_filter_tot = %f | l_filter_hit10 = %f\n", l_valid_filter_tot, l_valid_filter_tot / lastValidHead);
 }
@@ -72,6 +84,8 @@ void validTail(REAL *con) {
 	    }
     }
     if (r_filter_s < 10) r_valid_filter_tot += 1;
+    if (r_filter_s < 3) r_valid_filter_tot_3 += 1;
+    if (r_filter_s < 1) r_valid_filter_tot_1 += 1;
     lastValidTail ++;
 //    printf("tail: r_valid_filter_tot = %f | r_filter_hit10 = %f\n", r_valid_filter_tot, r_valid_filter_tot / lastValidTail);
 }
@@ -82,8 +96,28 @@ REAL getValidHit10() {
     l_valid_filter_tot /= validTotal;
     r_valid_filter_tot /= validTotal;
     validHit10 = (l_valid_filter_tot + r_valid_filter_tot) / 2;
-   // printf("result: %f\n", validHit10);
+    printf("result: %f\n", validHit10);
     return validHit10;
+}
+
+REAL validHit3 = 0;
+extern "C"
+REAL getValidHit3() {
+    l_valid_filter_tot_3 /= validTotal;
+    r_valid_filter_tot_3 /= validTotal;
+    validHit3 = (l_valid_filter_tot_3 + r_valid_filter_tot_3) / 2;
+    printf("result: %f\n", validHit3);
+    return validHit3;
+}
+
+REAL validHit1 = 0;
+extern "C"
+REAL getValidHit1() {
+    l_valid_filter_tot_1 /= validTotal;
+    r_valid_filter_tot_1 /= validTotal;
+    validHit1 = (l_valid_filter_tot_1 + r_valid_filter_tot_1) / 2;
+    printf("result: %f\n", validHit1);
+    return validHit1;
 }
 
 #endif
