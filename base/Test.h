@@ -309,7 +309,7 @@ REAL getFilterTestMeanReciprocalRankTypeConstraint(){
 }
 
 extern "C"
-void getResult(REAL result[]) {
+void getResultWithoutTypeConstraint(REAL result[]) {
     result[0] = getFilterTestMeanReciprocalRank();
     result[1] = getFilterTestMeanRank();
     result[2] = getFilterTestHit10();
@@ -454,8 +454,8 @@ void test_triple_classification(REAL *relThresh, REAL *score_pos, REAL *score_ne
 }
 
 extern "C"
-REAL getTripleClassificationAccuracy(){
-    return aveAcc;
+REAL getTripleClassificationAccuracy(REAL result[]){
+    result[0] = aveAcc;
 }
 
 extern "C"

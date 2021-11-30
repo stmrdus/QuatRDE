@@ -322,12 +322,14 @@ class Config(object):
         logging.getLogger('').addHandler(console)
 
     def set_train_model(self, model):
-        print("Initializing training model...")
+        #print("Initializing training model...")
+        logging.info("Initializing training model...")
         self.model = model
         self.trainModel = self.model(config=self)
         #self.trainModel = nn.DataParallel(self.trainModel, device_ids=[2,3,4])
-        
+                
         self.trainModel.cuda()
+                   
         if self.optimizer != None:
             pass
         elif self.opt_method == "Adagrad" or self.opt_method == "adagrad":
@@ -355,10 +357,16 @@ class Config(object):
                 lr=self.alpha,
                 weight_decay=self.weight_decay,
             )
-        print("Finish initializing")
+            
+        for name, param in self.trainModel.named_parameters():
+            logging.info('Parameter %s: %s, require_grad = %s' % (name, str(param.size()), str(param.requires_grad)))
+            
+        #print("Finish initializing")
+        logging.info("Finish initializing")
 
     def set_test_model(self, model, path=None):
-        print("Initializing test model...")
+        #print("Initializing test model...")
+        logging.info("Initializing test model...")
         self.model = model
         self.testModel = self.model(config=self)
         if path == None:
@@ -366,7 +374,8 @@ class Config(object):
         self.testModel.load_state_dict(torch.load(path))
         self.testModel.cuda()
         self.testModel.eval()
-        print("Finish initializing")
+        #print("Finish initializing")
+        logging.info("Finish initializing")
 
     def sampling(self):
         self.lib.sampling(
@@ -439,20 +448,26 @@ class Config(object):
         best_hit10 = 0.0
         best_hit3 = 0.0
         best_hit1 = 0.0
+        best_mr = 0.0
+        best_mrr = 0.0
         best_model = None
         bad_counts = 0
+        logging.info("Starting training model")
         for epoch in range(self.train_times):
             res = 0.0
             for batch in range(self.nbatches):
                 self.sampling()
                 loss = self.train_one_step()
                 res += loss
-            print("Epoch %d | loss: %f" % (epoch, res))
+            logging.info("Epoch %d | loss: %f" % (epoch, res))
+            #print("Epoch %d | loss: %f" % (epoch, res))
             if (epoch + 1) % self.save_steps == 0:
-                print("Epoch %d has finished, saving..." % (epoch))
+                #print("Epoch %d has finished, saving..." % (epoch))
+                logging.info("Epoch %d has finished, saving..." % (epoch))
                 self.save_checkpoint(self.trainModel.state_dict(), epoch)
             if (epoch + 1) % self.valid_steps == 0:
-                print("Epoch %d has finished, validating..." % (epoch))
+                #print("Epoch %d has finished, validating..." % (epoch))
+                logging.info("Epoch %d has finished, validating..." % (epoch))
                 result = self.valid(self.trainModel)
                 mrr = result[0]
                 mr = result[1]
@@ -463,40 +478,65 @@ class Config(object):
                     best_hit10 = hit10
                     best_hit3 = hit3
                     best_hit1 = hit1
+                    best_mr = mr
+                    best_mrr = mrr
                     best_epoch = epoch
                     best_model = self.trainModel.state_dict()
-                    print("Best model | hit@10 of valid set is %f" % (best_hit10))
-                    print("Best model | hit@3 of valid set is %f" % (best_hit3))
-                    print("Best model | hit@1 of valid set is %f" % (best_hit1))
+                    #print("Best model | hit@10 of valid set is %f" % (best_hit10))
+                    logging.info("Best model | hit@10 of valid set is %f" % (best_hit10))
+                    #print("Best model | hit@3 of valid set is %f" % (best_hit3))
+                    logging.info("Best model | hit@3 of valid set is %f" % (best_hit3))
+                    #print("Best model | hit@1 of valid set is %f" % (best_hit1))
+                    logging.info("Best model | hit@1 of valid set is %f" % (best_hit1))
+                    logging.info("Best model | MRR of valid set is %f" % (best_mrr))
+                    logging.info("Best model | MR of valid set is %f" % (best_mr))
                     bad_counts = 0
                 else:
-                    print(
-                        "Hit@10 of valid set is %f | bad count is %d"
-                        % (hit10, bad_counts)
-                    )
+                    #print(
+                    #    "Hit@10 of valid set is %f | bad count is %d"
+                    #    % (hit10, bad_counts)
+                    #)
+                    logging.info("Hit@10 of valid set is %f | bad count is %d"
+                        % (hit10, bad_counts))
+                    logging.info("Hit@3 of valid set is %f | bad count is %d"
+                        % (hit3, bad_counts))
+                    logging.info("Hit@1 of valid set is %f | bad count is %d"
+                        % (hit1, bad_counts))
+                    logging.info("MRR of valid set is %f | bad count is %d"
+                        % (mrr, bad_counts))
+                    logging.info("MR of valid set is %f | bad count is %d"
+                        % (hit10, bad_counts))
+                    
                     bad_counts += 1
                 if bad_counts == self.early_stopping_patience:
-                    print("Early stopping at epoch %d" % (epoch))
+                    #print("Early stopping at epoch %d" % (epoch))
+                    logging.info("Early stopping at epoch %d" % (epoch))
                     break
         if best_model == None:
             best_model = self.trainModel.state_dict()
             best_epoch = self.train_times - 1
             best_hit10 = self.valid(self.trainModel)
-        print("Best epoch is %d | hit@10 of valid set is %f" % (best_epoch, best_hit10))
-        print("Store checkpoint of best result at epoch %d..." % (best_epoch))
+        #print("Best epoch is %d | hit@10 of valid set is %f" % (best_epoch, best_hit10))
+        logging.info("Best epoch is %d | hit@10 of valid set is %f" % (best_epoch, best_hit10))
+        #print("Store checkpoint of best result at epoch %d..." % (best_epoch))
+        logging.info("Store checkpoint of best result at epoch %d..." % (best_epoch))
         if not os.path.isdir(self.result_dir):
             os.mkdir(self.result_dir)
         self.save_best_checkpoint(best_model)
         self.save_embedding_matrix(best_model)
-        print("Finish storing")
-        print("Testing...")
+        logging.info("Finish storing")
+        #print("Finish storing")
+        #print("Testing...")
+        logging.info("Testing...")
         self.set_test_model(self.model)
         self.test()
         print("Finish test")
+        logging.info("Finish test")
         return best_model
 
     def link_prediction(self):
-        print("The total of test triple is %d" % (self.testTotal))
+        #print("The total of test triple is %d" % (self.testTotal))
+        logging.info("The total of test triple is %d" % (self.testTotal))
         for i in range(self.testTotal):
             sys.stdout.write("%d\r" % (i))
             sys.stdout.flush()
@@ -513,10 +553,10 @@ class Config(object):
             self.lib.testTail(res.__array_interface__["data"][0])
         self.lib.test_link_prediction()
 
-        self.lib.getResult.argtypes = [POINTER(c_float)]
+        self.lib.getResultWithoutTypeConstraint.argtypes = [POINTER(c_float)]
         result = [0, 0, 0, 0, 0]
         result_c = (c_float * 5)(*result)
-        self.lib.getResult(result_c)
+        self.lib.getResultWithoutTypeConstraint(result_c)
         mrr = result_c[0]
         mr = result_c[1]
         hit_at_10 = result_c[2]
@@ -532,6 +572,18 @@ class Config(object):
         hit_at_10_type_constraint = result_c[2]
         hit_at_3_type_constraint = result_c[3]
         hit_at_1_type_constraint = result_c[4]
+        
+        logging.info("---------------LINK PREDICTION---------------")
+        logging.info("MRR: %f" % mrr)
+        logging.info("MR: %f" % mr)
+        logging.info("Hits@10: %f" % hit_at_10)
+        logging.info("Hits@3: %f" % hit_at_3)
+        logging.info("Hits@1: %f" % hit_at_1)
+        logging.info("MRR with type constraint: %f" % mrr_type_constraint)
+        logging.info("MR with type constraint: %f" % mr_type_constraint)
+        logging.info("Hits@10 with type constraint: %f" % hit_at_10_type_constraint)
+        logging.info("Hits@3 with type constraint: %f" % hit_at_3_type_constraint)
+        logging.info("Hits@1 with type constraint: %f" % hit_at_1_type_constraint)
         
         return mrr, mr, hit_at_10, hit_at_3, hit_at_1, mrr_type_constraint, mr_type_constraint, hit_at_10_type_constraint, hit_at_3_type_constraint, hit_at_1_type_constraint
 
@@ -576,7 +628,13 @@ class Config(object):
             res_neg.__array_interface__["data"][0],
         )
         
-        acc = self.lib.getTripleClassificationAccuracy()
+        self.lib.getTripleClassificationAccuracy.argtypes = [POINTER(c_float)]
+        result = [0]
+        result_c = (c_float * 1)(*result)
+        self.lib.getResultTypeConstraint(result_c)
+        acc = result_c[0]
+        logging.info("---------------TRIPLE CLASSIFICATION---------------")
+        logging.info("Accuracy: %f" % acc)
         return acc
 
     def test(self):
