@@ -11,6 +11,7 @@ import ctypes
 import json
 import numpy as np
 import logging
+from ctypes import *
 
 
 class MyDataParallel(nn.DataParallel):
@@ -425,7 +426,11 @@ class Config(object):
             )
             res = self.test_one_step(model, self.valid_h, self.valid_t, self.valid_r)
             self.lib.validTail(res.__array_interface__["data"][0])
-        return self.lib.getValidHit10(), self.lib.getValidHit3(), self.lib.getValidHit1()
+        self.lib.getResult.argtypes = [POINTER(c_float)]
+        result = [0, 0, 0, 0, 0]
+        result_c = (c_float * 5)(*result)
+        self.lib.getResult(result_c)
+        return result_c
 
     def train(self):
         if not os.path.exists(self.checkpoint_dir):
@@ -448,7 +453,12 @@ class Config(object):
                 self.save_checkpoint(self.trainModel.state_dict(), epoch)
             if (epoch + 1) % self.valid_steps == 0:
                 print("Epoch %d has finished, validating..." % (epoch))
-                hit10, hit3, hit1 = self.valid(self.trainModel)
+                result = self.valid(self.trainModel)
+                mrr = result[0]
+                mr = result[1]
+                hit10 = result[2]
+                hit3 = result[3]
+                hit1 = result[4]
                 if hit10 > best_hit10:
                     best_hit10 = hit10
                     best_hit3 = hit3
@@ -502,20 +512,27 @@ class Config(object):
             )
             self.lib.testTail(res.__array_interface__["data"][0])
         self.lib.test_link_prediction()
-        hit_at_10 = self.lib.getFilterTestHit10()
-        hit_at_10_type_constraint = self.lib.getFilterTestHit10TypeConstraint()
+
+        self.lib.getResult.argtypes = [POINTER(c_float)]
+        result = [0, 0, 0, 0, 0]
+        result_c = (c_float * 5)(*result)
+        self.lib.getResult(result_c)
+        mrr = result_c[0]
+        mr = result_c[1]
+        hit_at_10 = result_c[2]
+        hit_at_3 = result_c[3]
+        hit_at_1 = result_c[4]
+
+        self.lib.getResultTypeConstraint.argtypes = [POINTER(c_float)]
+        result = [0, 0, 0, 0, 0]
+        result_c = (c_float * 5)(*result)
+        self.lib.getResultTypeConstraint(result_c)
+        mrr_type_constraint = result_c[0]
+        mr_type_constraint = result_c[1]
+        hit_at_10_type_constraint = result_c[2]
+        hit_at_3_type_constraint = result_c[3]
+        hit_at_1_type_constraint = result_c[4]
         
-        hit_at_3 = self.lib.getFilterTestHit3()
-        hit_at_3_type_constraint = self.lib.getFilterTestHit3TypeConstraint()
-        
-        hit_at_1 = self.lib.getFilterTestHit1()
-        hit_at_1_type_constraint = self.lib.getFilterTestHit1TypeConstraint()
-        
-        mr = self.lib.getFilterTestMeanRank()
-        mrr = self.lib.getFilterTestMeanReciprocalRank()
-        
-        mr_type_constraint = self.lib.getFilterTestMeanRankTypeConstraint()
-        mrr_type_constraint = self.lib.getFilterTestMeanReciprocalRankTypeConstraint()
         return mrr, mr, hit_at_10, hit_at_3, hit_at_1, mrr_type_constraint, mr_type_constraint, hit_at_10_type_constraint, hit_at_3_type_constraint, hit_at_1_type_constraint
 
     def triple_classification(self):

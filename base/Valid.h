@@ -108,6 +108,35 @@ void validTail(REAL *con) {
 //    printf("tail: r_valid_filter_tot = %f | r_filter_hit10 = %f\n", r_valid_filter_tot, r_valid_filter_tot / lastValidTail);
 }
 
+extern "C"
+void getResult(REAL res[]){
+    l_valid_filter_tot /= validTotal;
+    r_valid_filter_tot /= validTotal;
+    validHit10 = (l_valid_filter_tot + r_valid_filter_tot) / 2;
+
+    l3_valid_filter_tot /= validTotal;
+    r3_valid_filter_tot /= validTotal;
+    validHit3 = (l3_valid_filter_tot + r3_valid_filter_tot) / 2;
+
+    l1_valid_filter_tot /= validTotal;
+    r1_valid_filter_tot /= validTotal;
+    validHit1 = (l1_valid_filter_tot + r1_valid_filter_tot) / 2;
+
+    l_valid_filter_rank /= validTotal;
+    r_valid_filter_rank /= validTotal;
+    validMeanRank = (l_valid_filter_rank + r_valid_filter_rank) / 2;
+
+    l_valid_filter_reci_rank /= validTotal;
+    r_valid_filter_reci_rank /= validTotal;
+    validMeanReciprocalRank = (l_valid_filter_reci_rank+ r_valid_filter_reci_rank) / 2;
+
+    res[0] = validMeanReciprocalRank;
+    res[1] = validMeanRank;
+    res[2] = validHit10;
+    res[3] = validHit3;
+    res[4] = validHit1;
+}
+
 REAL validHit10 = 0;
 extern "C"
 REAL getValidHit10() {
@@ -121,7 +150,7 @@ REAL getValidHit10() {
 REAL validHit3 = 0;
 extern "C"
 REAL getValidHit3() {
-    l1_valid_filter_tot /= validTotal;
+    l3_valid_filter_tot /= validTotal;
     r3_valid_filter_tot /= validTotal;
     validHit3 = (l3_valid_filter_tot + r3_valid_filter_tot) / 2;
     printf("result hits@3: %f\n", validHit3);

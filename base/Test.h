@@ -308,6 +308,24 @@ REAL getFilterTestMeanReciprocalRankTypeConstraint(){
     return (l_filter_reci_rank_constrain+r_filter_reci_rank_constrain)/2;
 }
 
+extern "C"
+void getResult(REAL result[]) {
+    result[0] = getFilterTestMeanReciprocalRank();
+    result[1] = getFilterTestMeanRank();
+    result[2] = getFilterTestHit10();
+    result[3] = getFilterTestHit3();
+    result[4] = getFilterTestHit1();
+}
+
+extern "C"
+void getResultTypeConstraint(REAL result[]){
+    result[0] = getFilterTestMeanReciprocalRankTypeConstraint();
+    result[1] = getFilterTestMeanRankTypeConstraint();
+    result[2] = getFilterTestHit10TypeConstraint();
+    result[3] = getFilterTestHit3TypeConstraint();
+    result[4] = getFilterTestHit1TypeConstraint();
+}
+
 /*=====================================================================================
 triple classification
 ======================================================================================*/
