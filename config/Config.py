@@ -13,27 +13,6 @@ import numpy as np
 import logging
 
 
-def set_logger(data_name, save_path):
-    directory = save_path + '/' + data_name
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    log_file = os.path.join(directory, 'train.log')
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S',
-        filename=log_file,
-        filemode='w'
-    )
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
-    console.setFormatter(formatter)
-    logging.getLogger('').addHandler(console)
-    
-
-set_logger(data_name='fb15k237', save_path='logs')
-
 class MyDataParallel(nn.DataParallel):
     def _getattr__(self, name):
         return getattr(self.module, name)
@@ -322,6 +301,24 @@ class Config(object):
         f = open(path, "w")
         f.write(json.dumps(self.get_parameters(best_model, "list")))
         f.close()
+        
+    def set_logger(self, data_name, save_path):
+        directory = save_path + '/' + data_name
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        log_file = os.path.join(directory, 'train.log')
+        logging.basicConfig(
+            format='%(asctime)s %(levelname)-8s %(message)s',
+            level=logging.INFO,
+            datefmt='%Y-%m-%d %H:%M:%S',
+            filename=log_file,
+            filemode='w'
+        )
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+        console.setFormatter(formatter)
+        logging.getLogger('').addHandler(console)
 
     def set_train_model(self, model):
         print("Initializing training model...")
@@ -505,6 +502,21 @@ class Config(object):
             )
             self.lib.testTail(res.__array_interface__["data"][0])
         self.lib.test_link_prediction()
+        hit_at_10 = self.lib.getFilterTestHit10()
+        hit_at_10_type_constraint = self.lib.getFilterTestHit10TypeConstraint()
+        
+        hit_at_3 = self.lib.getFilterTestHit3()
+        hit_at_3_type_constraint = self.lib.getFilterTestHit3TypeConstraint()
+        
+        hit_at_1 = self.lib.getFilterTestHit1()
+        hit_at_1_type_constraint = self.lib.getFilterTestHit1TypeConstraint()
+        
+        mr = self.lib.getFilterTestMeanRank()
+        mrr = self.lib.getFilterTestMeanReciprocalRank()
+        
+        mr_type_constraint = self.lib.getFilterTestMeanRankTypeConstraint()
+        mrr_type_constraint = self.lib.getFilterTestMeanReciprocalRankTypeConstraint()
+        return mrr, mr, hit_at_10, hit_at_3, hit_at_1, mrr_type_constraint, mr_type_constraint, hit_at_10_type_constraint, hit_at_3_type_constraint, hit_at_1_type_constraint
 
     def triple_classification(self):
         self.lib.getValidBatch(
@@ -546,6 +558,9 @@ class Config(object):
             res_pos.__array_interface__["data"][0],
             res_neg.__array_interface__["data"][0],
         )
+        
+        acc = self.lib.getTripleClassificationAccuracy()
+        return acc
 
     def test(self):
         if self.test_link:

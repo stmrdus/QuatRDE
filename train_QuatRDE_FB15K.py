@@ -9,10 +9,13 @@ con.set_train_times(3000)
 con.set_nbatches(100)
 con.set_alpha(0.1)
 con.set_bern(1)
+# Test ở các chiều: 100, 200, 300, 400
 con.set_dimension(200)
+# L2 regularization: 0.05, 0.1
 con.set_lmbda(0.05)
 con.set_lmbda_two(0.05)
 con.set_margin(1.0)
+# Number of negative triples for each triple: 1, 5, 10
 con.set_ent_neg_rate(5)
 con.set_rel_neg_rate(0)
 con.set_opt_method("adagrad")
@@ -26,3 +29,12 @@ con.set_test_triple(True)
 con.init()
 con.set_train_model(QuatRDE)
 con.train()
+
+'''
+Best config
+- dimension:
+- lambda:
+- lambda_2:
+- ent_neg_rate:
+- optimizer:
+'''

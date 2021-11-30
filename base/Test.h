@@ -258,6 +258,56 @@ void test_link_prediction() {
             (l_filter_reci_rank_constrain+r_filter_reci_rank_constrain)/2, (l_filter_rank_constrain+r_filter_rank_constrain)/2, (l_filter_tot_constrain+r_filter_tot_constrain)/2, (l3_filter_tot_constrain+r3_filter_tot_constrain)/2, (l1_filter_tot_constrain+r1_filter_tot_constrain)/2);
 }
 
+extern "C"
+REAL getFilterTestHit10(){
+    return (l_filter_tot+r_filter_tot)/2;
+}
+
+extern "C"
+REAL getFilterTestHit3(){
+    return (l3_filter_tot+r3_filter_tot)/2;
+}
+
+extern "C"
+REAL getFilterTestHit1(){
+    return (l1_filter_tot+r1_filter_tot)/2;
+}
+
+extern "C"
+REAL getFilterTestHit10TypeConstraint(){
+    return (l_filter_tot_constrain+r_filter_tot_constrain)/2;
+}
+
+extern "C"
+REAL getFilterTestHit3TypeConstraint(){
+    return (l3_filter_tot_constrain+r3_filter_tot_constrain)/2;
+}
+
+extern "C"
+REAL getFilterTestHit1TypeConstraint(){
+    return (l1_filter_tot_constrain+r1_filter_tot_constrain)/2;
+}
+
+extern "C"
+REAL getFilterTestMeanRank(){
+    return (l_filter_rank+r_filter_rank)/2;
+}
+
+extern "C"
+REAL getFilterTestMeanReciprocalRank(){
+    return (l_filter_reci_rank+r_filter_reci_rank)/2;
+}
+
+extern "C"
+REAL getFilterTestMeanRankTypeConstraint(){
+    return (l_filter_rank_constrain+r_filter_rank_constrain)/2;
+}
+
+extern "C"
+REAL getFilterTestMeanReciprocalRankTypeConstraint(){
+    return (l_filter_reci_rank_constrain+r_filter_reci_rank_constrain)/2;
+}
+
 /*=====================================================================================
 triple classification
 ======================================================================================*/
@@ -383,6 +433,11 @@ void test_triple_classification(REAL *relThresh, REAL *score_pos, REAL *score_ne
     }
     aveAcc = 1.0 * aveCorrect / aveTotal;
     printf("triple classification accuracy is %lf\n", aveAcc);
+}
+
+extern "C"
+REAL getTripleClassificationAccuracy(){
+    return aveAcc;
 }
 
 extern "C"
