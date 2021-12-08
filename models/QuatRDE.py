@@ -29,7 +29,8 @@ class QuatRDE(Model):
         self.init_weights()
 
     def init_weights(self):
-        if True:
+        init_from_transe = True
+        if init_from_transe == False:
             r, i, j, k = self.quaternion_init(self.config.entTotal, self.config.hidden_size)
             r, i, j, k = torch.from_numpy(r), torch.from_numpy(i), torch.from_numpy(j), torch.from_numpy(k)
             vec1 = torch.cat([r, i, j, k], dim=1)
@@ -45,8 +46,8 @@ class QuatRDE(Model):
             nn.init.xavier_uniform_(self.Whr.weight.data)
             nn.init.xavier_uniform_(self.Wtr.weight.data)
         else:
-            nn.init.xavier_uniform_(self.ent.weight.data)
-            nn.init.xavier_uniform_(self.rel.weight.data)
+            self.ent.weight.data = self.config.init_ent_embs
+            self.rel.weight.data = self.config.init_rel_embs
             nn.init.xavier_uniform_(self.ent_transfer.weight.data)
             nn.init.xavier_uniform_(self.rel_transfer.weight.data)
 

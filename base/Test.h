@@ -454,7 +454,7 @@ void test_triple_classification(REAL *relThresh, REAL *score_pos, REAL *score_ne
 }
 
 extern "C"
-REAL getTripleClassificationAccuracy(REAL result[]){
+void getTripleClassificationAccuracy(REAL result[]){
     result[0] = aveAcc;
 }
 

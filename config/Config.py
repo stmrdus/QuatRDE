@@ -126,6 +126,7 @@ class Config(object):
         self.pretrain_model = None
         self.ent_dropout = 0
         self.rel_dropout = 0
+        self.use_init_embeddings = False
         
     def init(self):
         self.lib.setInPath(
@@ -296,6 +297,11 @@ class Config(object):
             else:
                 res[param] = param_dict[param]
         return res
+    
+    def set_init_embeddings(self, entity_embs, rel_embs):
+        self.use_init_embeddings = True
+        self.init_ent_embs = torch.from_numpy(entity_embs).cuda()
+        self.init_rel_embs = torch.from_numpy(rel_embs).cuda()
 
     def save_embedding_matrix(self, best_model):
         path = os.path.join(self.result_dir, self.model.__name__ + ".json")
