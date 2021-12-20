@@ -20,17 +20,12 @@ class QuatRDE(Model):
         self.Whr = nn.Embedding(self.config.relTotal, 4 * self.config.hidden_size)
         self.Wtr = nn.Embedding(self.config.relTotal, 4 * self.config.hidden_size)
         self.rel_w = nn.Embedding(self.config.relTotal, self.config.hidden_size)
-
         self.criterion = nn.Softplus()
-        self.fc = nn.Linear(100, 50, bias=False)
-        self.ent_dropout = torch.nn.Dropout(self.config.ent_dropout)
-        self.rel_dropout = torch.nn.Dropout(self.config.rel_dropout)
-        self.bn = torch.nn.BatchNorm1d(self.config.hidden_size)
+        self.quaternion_init = False
         self.init_weights()
 
     def init_weights(self):
-        init_from_transe = True
-        if init_from_transe == False:
+        if self.quaternion_init:
             r, i, j, k = self.quaternion_init(self.config.entTotal, self.config.hidden_size)
             r, i, j, k = torch.from_numpy(r), torch.from_numpy(i), torch.from_numpy(j), torch.from_numpy(k)
             vec1 = torch.cat([r, i, j, k], dim=1)
@@ -46,10 +41,11 @@ class QuatRDE(Model):
             nn.init.xavier_uniform_(self.Whr.weight.data)
             nn.init.xavier_uniform_(self.Wtr.weight.data)
         else:
-            self.ent.weight.data = self.config.init_ent_embs
-            self.rel.weight.data = self.config.init_rel_embs
-            nn.init.xavier_uniform_(self.ent_transfer.weight.data)
-            nn.init.xavier_uniform_(self.rel_transfer.weight.data)
+            nn.init.xavier_uniform_(self.ent.weight.data)
+            nn.init.xavier_uniform_(self.rel.weight.data)
+            nn.init.xavier_uniform_(self.rel_w.weight.data)
+            nn.init.xavier_uniform_(self.Whr.weight.data)
+            nn.init.xavier_uniform_(self.Wtr.weight.data)
 
     def _calc(self, h, r):
         s_a, x_a, y_a, z_a = torch.chunk(h, 4, dim=1)
@@ -61,8 +57,8 @@ class QuatRDE(Model):
         y_b = y_b / denominator_b
         z_b = z_b / denominator_b
 
-        A = s_a * s_b - x_a * x_b - y_a * y_b - z_a * z_b
-        B = s_a * x_b + s_b * x_a + y_a * z_b - y_b * z_a
+        A = s_a * s_b - x_a * x_b - y_a * y_b - z_a * z_b # qrpr−qipi−qjpj−qkpk
+        B = s_a * x_b + s_b * x_a + y_a * z_b - y_b * z_a 
         C = s_a * y_b + s_b * y_a + z_a * x_b - z_b * x_a
         D = s_a * z_b + s_b * z_a + x_a * y_b - x_b * y_a
 
@@ -81,7 +77,6 @@ class QuatRDE(Model):
     def _transfer(self, x, x_transfer, r_transfer):
         ent_transfer = self._calc(x, x_transfer)
         ent_rel_transfer = self._calc(ent_transfer, r_transfer)
-
         return ent_rel_transfer
 
     def forward(self):
