@@ -4,6 +4,7 @@ import json
 import os 
 con = config.Config()
 con.set_in_path("./benchmarks/YAGO3-10/")
+con.set_logger('yago3-10', 'logs')
 con.set_work_threads(8)
 con.set_train_times(3000)
 con.set_nbatches(100)

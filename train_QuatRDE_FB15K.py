@@ -4,6 +4,7 @@ import json
 import os 
 con = config.Config()
 con.set_in_path("./benchmarks/FB15K/")
+con.set_logger('fb15k', 'logs')
 con.set_work_threads(8)
 con.set_train_times(3000)
 con.set_nbatches(100)

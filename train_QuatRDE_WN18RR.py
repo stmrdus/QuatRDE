@@ -6,6 +6,7 @@ import numpy as np
 
 con = config.Config()
 con.set_in_path("./benchmarks/WN18RR/")
+con.set_logger('wn18rr', 'logs')
 con.set_work_threads(8)
 con.set_train_times(3000)
 con.set_nbatches(100)

@@ -3,6 +3,7 @@ from  models import *
 import json
 con = config.Config()
 con.set_in_path("./benchmarks/WN18/")
+con.set_logger('wn18', 'logs')
 con.set_work_threads(8)
 con.set_train_times(3000)
 con.set_nbatches(100)

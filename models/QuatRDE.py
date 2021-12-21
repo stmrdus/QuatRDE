@@ -101,7 +101,7 @@ class QuatRDE(Model):
         hrr = self._calc(h_r, r)
         
         # Inner product as QuatE
-        score = torch.sum(hrr * t_r, -1)
+        score = -torch.sum(hrr * t_r, -1)
 
         regul = self.regulation(h) + self.regulation(r) + self.regulation(t) + \
                 self.regulation(h_transfer) + self.regulation(r_transfer) + self.regulation(t_transfer) + \
@@ -129,7 +129,7 @@ class QuatRDE(Model):
         hrr = self._calc(h_r, r)
         
         # Inner product as QuatE
-        score = torch.sum(hrr * t_r, -1)
+        score = -torch.sum(hrr * t_r, -1)
 
         return score.cpu().data.numpy()
 
