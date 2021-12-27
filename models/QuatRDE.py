@@ -16,7 +16,6 @@ class QuatRDE(Model):
         self.Wtr = nn.Embedding(self.config.relTotal, 4 * self.config.hidden_size)
         self.criterion = nn.Softplus()
         self.f = nn.PReLU()
-        self.quaternion_init = False
         self.init_weights()
 
     def init_weights(self):
