@@ -1,14 +1,9 @@
 import torch
-import torch.autograd as autograd
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
 import numpy as np
 from .Model import Model
 from numpy.random import RandomState
 
-# origin
 class QuatRDE(Model):
     def __init__(self, config):
         super(QuatRDE, self).__init__(config)
@@ -19,33 +14,16 @@ class QuatRDE(Model):
         self.rel_transfer = nn.Embedding(self.config.relTotal, self.config.hidden_size * 4)
         self.Whr = nn.Embedding(self.config.relTotal, 4 * self.config.hidden_size)
         self.Wtr = nn.Embedding(self.config.relTotal, 4 * self.config.hidden_size)
-        self.rel_w = nn.Embedding(self.config.relTotal, self.config.hidden_size)
         self.criterion = nn.Softplus()
+        self.f = nn.PReLU()
         self.quaternion_init = False
         self.init_weights()
 
     def init_weights(self):
-        if self.quaternion_init:
-            r, i, j, k = self.quaternion_init(self.config.entTotal, self.config.hidden_size)
-            r, i, j, k = torch.from_numpy(r), torch.from_numpy(i), torch.from_numpy(j), torch.from_numpy(k)
-            vec1 = torch.cat([r, i, j, k], dim=1)
-            self.ent.weight.data = vec1.type_as(self.ent.weight.data)
-            self.ent_transfer.weight.data = vec1.type_as(self.ent_transfer.weight.data)
-
-            s, x, y, z = self.quaternion_init(self.config.relTotal, self.config.hidden_size)
-            s, x, y, z = torch.from_numpy(s), torch.from_numpy(x), torch.from_numpy(y), torch.from_numpy(z)
-            vec2 = torch.cat([s, x, y, z], dim=1)
-            self.rel.data = vec2.type_as(self.rel.weight.data)
-            self.rel_transfer.data = vec2.type_as(self.rel_transfer.weight.data)
-            nn.init.xavier_uniform_(self.rel_w.weight.data)
-            nn.init.xavier_uniform_(self.Whr.weight.data)
-            nn.init.xavier_uniform_(self.Wtr.weight.data)
-        else:
-            nn.init.xavier_uniform_(self.ent.weight.data)
-            nn.init.xavier_uniform_(self.rel.weight.data)
-            nn.init.xavier_uniform_(self.rel_w.weight.data)
-            nn.init.xavier_uniform_(self.Whr.weight.data)
-            nn.init.xavier_uniform_(self.Wtr.weight.data)
+        nn.init.kaiming_uniform_(self.ent.weight.data)
+        nn.init.kaiming_uniform_(self.rel.weight.data)
+        nn.init.kaiming_uniform_(self.Whr.weight.data)
+        nn.init.kaiming_uniform_(self.Wtr.weight.data)
 
     def _calc(self, h, r):
         s_a, x_a, y_a, z_a = torch.chunk(h, 4, dim=1)
@@ -65,9 +43,8 @@ class QuatRDE(Model):
         return torch.cat([A, B, C, D], dim=1)
 
     def loss(self, score, regul):
-        # self.batch_y = ((1.0-0.1)*self.batch_y) + (1.0/self.batch_y.size(1)) /// (1 + (1 + self.batch_y)/2) * 
         return (
-                torch.mean(self.criterion(score * self.batch_y)) + self.config.lmbda * regul
+            torch.mean(self.criterion(score * self.batch_y)) + self.config.lmbda * regul
         )
 
     def regulation(self, x):
@@ -101,7 +78,7 @@ class QuatRDE(Model):
         hrr = self._calc(h_r, r)
         
         # Inner product as QuatE
-        score = -torch.sum(hrr * t_r, -1)
+        score = self.f(torch.sum(hrr * t_r, -1))
 
         regul = self.regulation(h) + self.regulation(r) + self.regulation(t) + \
                 self.regulation(h_transfer) + self.regulation(r_transfer) + self.regulation(t_transfer) + \
@@ -129,47 +106,6 @@ class QuatRDE(Model):
         hrr = self._calc(h_r, r)
         
         # Inner product as QuatE
-        score = -torch.sum(hrr * t_r, -1)
+        score = self.f(torch.sum(hrr * t_r, -1))
 
         return score.cpu().data.numpy()
-
-    def quaternion_init(self, in_features, out_features, criterion='he'):
-
-        fan_in = in_features
-        fan_out = out_features
-
-        if criterion == 'glorot':
-            s = 1. / np.sqrt(2 * (fan_in + fan_out))
-        elif criterion == 'he':
-            s = 1. / np.sqrt(2 * fan_in)
-        else:
-            raise ValueError('Invalid criterion: ', criterion)
-        rng = RandomState(123)
-
-        # Generating randoms and purely imaginary quaternions :
-        kernel_shape = (in_features, out_features)
-
-        number_of_weights = np.prod(kernel_shape)
-        v_i = np.random.uniform(0.0, 1.0, number_of_weights)
-        v_j = np.random.uniform(0.0, 1.0, number_of_weights)
-        v_k = np.random.uniform(0.0, 1.0, number_of_weights)
-
-        # Purely imaginary quaternions unitary
-        for i in range(0, number_of_weights):
-            norm = np.sqrt(v_i[i] ** 2 + v_j[i] ** 2 + v_k[i] ** 2) + 0.0001
-            v_i[i] /= norm
-            v_j[i] /= norm
-            v_k[i] /= norm
-        v_i = v_i.reshape(kernel_shape)
-        v_j = v_j.reshape(kernel_shape)
-        v_k = v_k.reshape(kernel_shape)
-
-        modulus = rng.uniform(low=-s, high=s, size=kernel_shape)
-        phase = rng.uniform(low=-np.pi, high=np.pi, size=kernel_shape)
-
-        weight_r = modulus * np.cos(phase)
-        weight_i = modulus * v_i * np.sin(phase)
-        weight_j = modulus * v_j * np.sin(phase)
-        weight_k = modulus * v_k * np.sin(phase)
-
-        return (weight_r, weight_i, weight_j, weight_k)
