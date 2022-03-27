@@ -65,6 +65,11 @@ Nhut-Nam Le - [@Namlee298](https://twitter.com/Namlee298) - lenam.fithcmus@gmail
 
 Project Link: [https://github.com/nhutnamhcmus/QuatRDE](https://github.com/nhutnamhcmus/QuatRDE)
 
+This project is based on:
+- [https://github.com/cheungdaven/QuatE](https://github.com/cheungdaven/QuatE)
+- [https://github.com/daiquocnguyen/QuatRE](https://github.com/daiquocnguyen/QuatRE)
+- [https://github.com/hopkin-ghp/QuatDE](https://github.com/hopkin-ghp/QuatDE)
+
 ## Acknowledgements 
 
 This research is funded by the University of Science, VNU-HCM, Vietnam under grant number CNTT 2022-2 and Advanced Program in Computer Science.
