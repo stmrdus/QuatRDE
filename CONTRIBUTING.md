@@ -1,4 +1,4 @@
-# Contributing to TKGER
+# Contributing
 
 Hi there! We're thrilled that you'd like to contribute to this project. We want to make contributing to this project as easy and transparent as
 possible. Your help is essential for keeping it great. 
